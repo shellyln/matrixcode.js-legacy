@@ -15,7 +15,7 @@ QR Code, Data Matrix, PDF417, and other barcodes library for JavaScript (experim
 
 
 # Demo
-  * [http://peaceful-reef-9492.herokuapp.com/](http://peaceful-reef-9492.herokuapp.com/)
+  * [http://peaceful-reef-9492.herokuapp.com/](http://peaceful-reef-9492.herokuapp.com/) (Server is SLOW)
   * download [zip](https://github.com/qnq777/matrixcode.js-legacy/archive/master.zip) and
     open [public_html/index.html](https://github.com/qnq777/matrixcode.js-legacy/blob/master/public_html/index.html)
 
