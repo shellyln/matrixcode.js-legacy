@@ -12,3 +12,7 @@ QR Code, Data Matrix, PDF417, and other barcodes library for JavaScript (experim
   * pollute global namespace
   * Micro QR (JIS X 0510) is not implemented
   * Model 1 QR Code is not tested well
+
+
+----
+This program was written in April 2009 from January 2009.
