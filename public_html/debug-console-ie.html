@@ -1,0 +1,864 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC
+     "-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN"
+     "http://www.w3.org/2002/04/xhtml-math-svg/xhtml-math-svg-flat.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+
+<head>
+<title>Debug Console</title>
+<link rel="icon" type="image/png" href="favicon.ico" />
+<!-- <link rel="stylesheet" type="text/css" href="jq/theme/ui.all.css" /> -->
+<style>
+div.GroupBox {border:1px solid navy;margin:2px 0 0 0;padding:2px;}
+.BarcodeParamButton {cursor:pointer;width:6em;display:inline-block;background-color:#eeeeee;}
+.BarcodeParamButtonHover {cursor:pointer;width:6em;display:inline-block;background-color:#ffffee;}
+.PanelTitleBar {cursor:pointer;width:900px;display:inline-block;background-color:#fefefe;}
+.PanelTitleBarHover {cursor:pointer;width:900px;display:inline-block;background-color:#ffffee;}
+</style>
+<!--[if IE]><script type="text/javascript" src="excanvas.compiled.js"></script><![endif]-->
+<script src="air/AIRAliases.js" type="text/javascript"></script>
+<script src="jq/json2.js" type="text/javascript"></script>
+<script src="jq/jquery.js" type="text/javascript"></script>
+<script src="jq/jquery-ui.js" type="text/javascript"></script>
+<script src="js/ajaxconf.js" type="text/javascript"></script>
+<script src="js/classxt.js" type="text/javascript"></script>
+<script src="js/math/sb67.js" type="text/javascript"></script>
+<script src="js/math/fldmath.js" type="text/javascript"></script>
+<script src="js/math/gf2math.js" type="text/javascript"></script>
+<script src="js/math/gfpmath.js" type="text/javascript"></script>
+<script src="js/math/bchmath.js" type="text/javascript"></script>
+<script src="js/math/decintmath.js" type="text/javascript"></script>
+<script src="js/qrcode/qrm1data.js" type="text/javascript"></script>
+<script src="js/qrcode/qrm2data.js" type="text/javascript"></script>
+<script src="js/qrcode/qrmcdata.js" type="text/javascript"></script>
+<script src="js/qrcode/qrcode.js" type="text/javascript"></script>
+<script src="js/qrcode/qrm1.js" type="text/javascript"></script>
+<script src="js/qrcode/qrm2.js" type="text/javascript"></script>
+<script src="js/qrcode/qrmc.js" type="text/javascript"></script>
+<script src="js/dmatx/dmatx200.js" type="text/javascript"></script>
+<script src="js/pdf417/pdf417data.js" type="text/javascript"></script>
+<script src="js/pdf417/pdf417.js" type="text/javascript"></script>
+<script src="js/barcode/barcode.js" type="text/javascript"></script>
+<script src="js/barcode/ean.js" type="text/javascript"></script>
+<script src="js/barcode/2of5.js" type="text/javascript"></script>
+<script src="js/barcode/nw7.js" type="text/javascript"></script>
+<script src="js/barcode/code39.js" type="text/javascript"></script>
+<script src="js/barcode/code128.js" type="text/javascript"></script>
+<script src="js/postal/rm4scc.js" type="text/javascript"></script>
+<script src="js/postal/postbar.js" type="text/javascript"></script>
+<script src="js/postal/postal_au.js" type="text/javascript"></script>
+<script src="js/postal/postal_ca.js" type="text/javascript"></script>
+<script src="js/postal/postal_cn.js" type="text/javascript"></script>
+<script src="js/postal/postal_de.js" type="text/javascript"></script>
+<script src="js/postal/postal_ja.js" type="text/javascript"></script>
+<script src="js/postal/postal_nl.js" type="text/javascript"></script>
+<script src="js/postal/postal_uk.js" type="text/javascript"></script>
+<script src="js/jqplugins.js" type="text/javascript"></script>
+<script type="text/javascript">
+//<![CDATA[
+$(function() {
+  $("#mycanvas2d").paintQrCodeM2(1, "M", "Num", "UTF-8", "01234567", 10, 10, 3, -1);
+
+
+  var r = new DataMatrixECC200Renderer();
+  var dmatxsizes = r.getAllSymbolSize();
+  for (var i = 0; i < dmatxsizes.length; i++) {
+    $("#dmatxsize").append(
+      "<option value=\"" +
+        dmatxsizes[i][2].toString() + " " + dmatxsizes[i][3].toString() + "\">" +
+        dmatxsizes[i][4] + "</option>");
+  }
+
+
+  var gfm = new Gf2p8Math();
+  var pfm = new GfPMath(929);
+  var bfm = new Bch32Math();
+  var dfm = new BigDecimalIntFieldMath(64);
+  var curfm = pfm;
+  var qwerty = dfm.fromString("-123456789012345678901234567890");
+  var asdfgh = dfm.strFromVal(qwerty);
+
+  // begin gausian elimanation --------------------
+    var gmat = [
+      [ 1,  2,  3,  4,  5],
+      [11, 12, 13, 14, 15],
+      [21, 22, 23, 24, 25],
+      [31, 32, 33, 34, 35]];
+    gmat = gfm.gausianEliminate(gmat,0,0,4);
+  // end   gausian elimanation --------------------
+
+  // begin error correction --------------------
+    var gx = gfm.rsMakeGx(10);
+    var ax = [
+       16, 32, 12, 86, 97,128,236, 17,
+      236, 17,236, 17,236, 17,236, 17].reverse();
+    var zx = gfm.rsModPoly(ax, gx).concat(ax);
+    var zx_copy = [];
+    for (var i = 0; i < zx.length; i++) {
+      zx_copy.push(zx[i]);
+    }
+    zx[ 3] ^= 0x00ef;
+    zx[15] ^= 0x00e1;
+    zx[18] ^= 0x00e2;
+    zx[20] ^= 0x00e3;
+    zx = gfm.rsCheckAndCorrect(zx, 4);
+    $("#polyValX").val(zx.splice(10, 16));
+    $("#polyValY").val(gx);
+    for (var i = 0; i < zx.length; i++) {
+      if (zx_copy[i] != zx[i]) {
+        alert("bad correction.");
+        throw new Error("bad correction.");
+      }
+    }
+  // end   error correction --------------------
+
+  // begin error correction2 --------------------
+    var gx = pfm.rsMakeGx(4);
+    var ax = [5, 453, 178, 121, 239].reverse();
+    var zx = pfm.rsModPoly(ax, gx).concat(ax);
+    var rx = [619,657,327,452];
+  // end   error correction2 --------------------
+
+  // begin big decimal calc --------------------
+    // add
+    for (var i = 0; i < 2; i++) {
+      var decma = Math.floor(Math.random() * Math.pow(10, 9));
+      if (0 == (Math.floor(Math.random() * 10) % 2)) { decma = -decma; }
+      var decmb = Math.floor(Math.random() * Math.pow(10, 9));
+      if (0 == (Math.floor(Math.random() * 10) % 2)) { decmb = -decmb; }
+      var decmr = dfm.addVal(dfm.fromString(decma.toString()), dfm.fromString(decmb.toString()));
+      decmr = dfm.strFromVal(decmr);
+      if ((decma + decmb).toString() != decmr) {
+        alert("bad big decimal calc add.");
+        throw new Error("bad big decimal calc add.");
+      }
+    }
+    // sub
+    for (var i = 0; i < 2; i++) {
+      var decma = Math.floor(Math.random() * Math.pow(10, 9));
+      if (0 == (Math.floor(Math.random() * 10) % 2)) { decma = -decma; }
+      var decmb = Math.floor(Math.random() * Math.pow(10, 9));
+      if (0 == (Math.floor(Math.random() * 10) % 2)) { decmb = -decmb; }
+      var decmr = dfm.subVal(dfm.fromString(decma.toString()), dfm.fromString(decmb.toString()));
+      decmr = dfm.strFromVal(decmr);
+      if ((decma - decmb).toString() != decmr) {
+        alert("bad big decimal calc sub.");
+        throw new Error("bad big decimal calc sub.");
+      }
+    }
+    // mul
+    for (var i = 0; i < 2; i++) {
+      var decma = Math.floor(Math.random() * Math.pow(10, 7));
+      if (0 == (Math.floor(Math.random() * 10) % 2)) { decma = -decma; }
+      var decmb = Math.floor(Math.random() * Math.pow(10, 7));
+      if (0 == (Math.floor(Math.random() * 10) % 2)) { decmb = -decmb; }
+      var decmr = dfm.mulVal(dfm.fromString(decma.toString()), dfm.fromString(decmb.toString()));
+      decmr = dfm.strFromVal(decmr);
+      if ((decma * decmb).toString() != decmr) {
+        alert("bad big decimal calc mul.");
+        throw new Error("bad big decimal calc mul.");
+      }
+    }
+    // div
+    for (var i = 0; i < 2; i++) {
+      var decma = Math.floor(Math.random() * Math.pow(10, 9));
+      if (0 == (Math.floor(Math.random() * 10) % 2)) { decma = -decma; }
+      var decmb = Math.floor(Math.random() * Math.pow(10, 9));
+      if (0 == decmb) { continue; }
+      if (0 == (Math.floor(Math.random() * 10) % 2)) { decmb = -decmb; }
+      var decmr = dfm.divmodVal(dfm.fromString(decma.toString()), dfm.fromString(decmb.toString()));
+      var decmr2 = dfm.strFromVal(decmr[0]);
+      var decmr3 = dfm.strFromVal(decmr[1]);
+      var decms = ((decma / decmb) < 0) ? -1: 1;
+      if ((Math.floor(Math.abs(decma / decmb)) * decms).toString() != decmr2) {
+        alert("bad big decimal calc div.");
+        throw new Error("bad big decimal calc div.");
+      }
+      if ((Math.abs(decma % decmb)).toString() != decmr3) {
+        alert("bad big decimal calc mod.");
+        throw new Error("bad big decimal calc mod.");
+      }
+    }
+  // end   big decimal calc --------------------
+
+
+  $("#nextPage").click(function() {
+    location.href = "second.xhtml";
+  });
+  $("#GfTestbedPanelsToggle").click(function() {
+    $(".GfTestbedPanels").toggle();
+  });
+
+  $("#valAdd").click(function() {
+    $("#qqq").append(
+      "<div>" + curfm.strFromVal(curfm.addVal(
+        curfm.fromString($("#polyValX").val()), curfm.fromString($("#polyValY").val())
+      )) + "</div>");
+  });
+  $("#valSub").click(function() {
+    $("#qqq").append(
+      "<div>" + curfm.strFromVal(curfm.subVal(
+        curfm.fromString($("#polyValX").val()), curfm.fromString($("#polyValY").val())
+      )) + "</div>");
+  });
+  $("#valMul").click(function() {
+    $("#qqq").append(
+      "<div>" + curfm.strFromVal(curfm.mulVal(
+        curfm.fromString($("#polyValX").val()), curfm.fromString($("#polyValY").val())
+      )) + "</div>");
+  });
+  $("#valDiv").click(function() {
+    var a = curfm.divmodVal(
+        curfm.fromString($("#polyValX").val()),
+        curfm.fromString($("#polyValY").val()));
+    $("#qqq").append("<div>" + curfm.strFromVal(a[0]) + " : " + curfm.strFromVal(a[1]) + "</div>");
+  });
+  $("#valNeg").click(function() {
+    $("#qqq").append(
+      "<div>" + curfm.strFromVal(curfm.negVal(
+        curfm.fromString($("#polyValX").val())
+      )) + "</div>");
+  });
+  $("#valInv").click(function() {
+    $("#qqq").append(
+      "<div>" + curfm.strFromVal(curfm.invVal(
+        curfm.fromString($("#polyValX").val())
+      )) + "</div>");
+  });
+  $("#valExp").click(function() {
+    $("#qqq").append(
+      "<div>" + curfm.strFromVal(curfm.expOfVal(
+        curfm.fromString($("#polyValX").val())
+      )) + "</div>");
+  });
+  $("#valLog").click(function() {
+    $("#qqq").append(
+      "<div>" + curfm.strFromVal(curfm.logOfVal(
+        curfm.fromString($("#polyValX").val())
+      )) + "</div>");
+  });
+  $("#polyAdd").click(function() {
+    $("#qqq").append(
+      "<div>" + curfm.addPoly(
+        JSON.parse("[" + $("#polyValX").val() + "]"),
+        JSON.parse("[" + $("#polyValY").val() + "]")
+      ).join() + "</div>");
+  });
+  $("#polySub").click(function() {
+    $("#qqq").append(
+      "<div>" + curfm.subPoly(
+        JSON.parse("[" + $("#polyValX").val() + "]"),
+        JSON.parse("[" + $("#polyValY").val() + "]")
+      ).join() + "</div>");
+  });
+  $("#polyMul").click(function() {
+    $("#qqq").append(
+      "<div>" + curfm.mulPoly(
+        JSON.parse("[" + $("#polyValX").val() + "]"),
+        JSON.parse("[" + $("#polyValY").val() + "]")
+      ).join() + "</div>");
+  });
+  $("#polyDiv").click(function() {
+    var ret = curfm.divmodPoly(
+        JSON.parse("[" + $("#polyValX").val() + "]"),
+        JSON.parse("[" + $("#polyValY").val() + "]")
+      );
+    $("#qqq").append(
+      "<div>" + ret[0].join() + ";" + ret[1].join() + "</div>");
+  });
+  $("#polyMod").click(function() {
+    $("#qqq").append(
+      "<div>" + curfm.rsModPoly(
+        JSON.parse("[" + $("#polyValX").val() + "]"),
+        JSON.parse("[" + $("#polyValY").val() + "]")
+      ).join() + "</div>");
+  });
+  $("#2dCanvasTitleBar1").click(function() {
+    $("#2dCanvasBody1").toggle();
+  });
+  $("#svgCanvasTitleBar1").click(function() {
+    $("#svgCanvasBody1").toggle();
+  });
+  $("#svgCanvasTitleBar2").click(function() {
+    $("#svgCanvasBody2").toggle();
+  });
+  $("#2dCanvasTitleBar1").hover(function() {
+    $("#2dCanvasTitleBar1").addClass("PanelTitleBarHover");
+  }, function() {
+    $("#2dCanvasTitleBar1").removeClass("PanelTitleBarHover");
+  });
+  $("#svgCanvasTitleBar1").hover(function() {
+    $("#svgCanvasTitleBar1").addClass("PanelTitleBarHover");
+  }, function() {
+    $("#svgCanvasTitleBar1").removeClass("PanelTitleBarHover");
+  });
+  $("#svgCanvasTitleBar2").hover(function() {
+    $("#svgCanvasTitleBar2").addClass("PanelTitleBarHover");
+  }, function() {
+    $("#svgCanvasTitleBar2").removeClass("PanelTitleBarHover");
+  });
+  $("#utf8enc").click(function() {
+    $("#qrval").val(__toUtf8Bytes($("#qrval").val()));
+  });
+  $("#utf8dec").click(function() {
+    $("#qrval").val(__fromUtf8Bytes(JSON.parse("[" + $("#qrval").val() + "]")));
+  });
+  $("#javaenc").click(function() {
+    $("#qrval").val(__strToBytes_usejava($("#qrval").val(), $("#qrcharset").val()));
+  });
+  $("#javadec").click(function() {
+    $("#qrval").val(__strFromBytes_usejava(JSON.parse("[" + $("#qrval").val() + "]"), $("#qrcharset").val()));
+  });
+  $("#ajaxenc").click(function() {
+    $("#qrval").val(__strToBytes_ajax($("#qrval").val(), $("#qrcharset").val()));
+  });
+  $("#ajaxdec").click(function() {
+    $("#qrval").val(__strFromBytes_ajax(JSON.parse("[" + $("#qrval").val() + "]"), $("#qrcharset").val()));
+  });
+  $("#sb67enc").click(function() {
+    $("#qrval").val(new SB67().encode("qwertyuiopasdfghjkl", $("#qrval").val(), 1237));
+  });
+  $("#sb67dec").click(function() {
+    $("#qrval").val(new SB67().decode("qwertyuiopasdfghjkl", $("#qrval").val(), 1237));
+  });
+  $("#base64enc").click(function() {
+    $("#qrval").val(__encodeBase64($("#qrval").val()));
+  });
+  $("#base64dec").click(function() {
+    $("#qrval").val(__decodeBase64($("#qrval").val()));
+  });
+  $("#base32enc").click(function() {
+    $("#qrval").val(__encodeBase32($("#qrval").val()));
+  });
+  $("#base32dec").click(function() {
+    $("#qrval").val(__decodeBase32($("#qrval").val()));
+  });
+  $("#base16enc").click(function() {
+    $("#qrval").val(__encodeHex($("#qrval").val()));
+  });
+  $("#base16dec").click(function() {
+    $("#qrval").val(__decodeHex($("#qrval").val()));
+  });
+
+  $("#BarcodeRedraw_QR").click(function() {
+    $("#mycanvas2d").clearCanvas();
+    switch ($("#qrmodel").val()) {
+    case "1":
+      $("#mycanvas2d").paintQrCodeM1(
+        $("#qrver").val(), $("#qrecc").val(), $("#qrmode").val(), $("#qrcharset").val(), $("#qrval").val(),
+        10, 10, 3, $("#qrmask").val());
+      break;
+    case "2":
+      $("#mycanvas2d").paintQrCodeM2(
+        $("#qrver").val(), $("#qrecc").val(), $("#qrmode").val(), $("#qrcharset").val(), $("#qrval").val(),
+        10, 10, 3, $("#qrmask").val());
+      break;
+    case "C":
+      $("#mycanvas2d").paintQrCodeMC(
+        $("#qrver").val(), $("#qrecc").val(), $("#qrmode").val(), $("#qrcharset").val(), $("#qrval").val(),
+        10, 10, 3, $("#qrmask").val());
+      break;
+    }
+
+    //$("#svgCanvasBody2").paintQrCodeM2_SVG(
+    //  $("#qrver").val(), $("#qrecc").val(), $("#qrmode").val(), $("#qrcharset").val(), $("#qrval").val(),
+    //  1, 1, 0.05);
+  });
+  $("#BarcodeRedraw_Dmatx").click(function() {
+    var rxc = $("#dmatxsize").val().split(" ");
+    $("#mycanvas2d").clearCanvas();
+    $("#mycanvas2d").paintDmatx200(
+      parseInt(rxc[0]), parseInt(rxc[1]), $("#dmatxmode").val(), $("#dmatxcharset").val(), $("#qrval").val(), 10, 10, 3);
+  });
+  $("#BarcodeRedraw_PDF417").click(function() {
+    $("#mycanvas2d").clearCanvas();
+    var r = new Pdf417Renderer();
+    var mat = r.createSymbol(
+      $("#qrval").val(),
+      $("#pdf417row").val(), $("#pdf417col").val(),
+      $("#pdf417eclv").val(), $("#pdf417mode").val() , $("#pdf417charset").val());
+    switch ($("#pdf417type").val()) {
+    case "Full":
+      r.drawSymbol($("#mycanvas2d")[0], 10, 10, 2, 6, mat[0]);
+      break;
+    case "Compact":
+      r.drawCompactSymbol($("#mycanvas2d")[0], 10, 10, 2, 6, mat[0]);
+      break;
+    }
+  });
+  $("#BarcodeRedraw_JAN").click(function() {
+    $("#mycanvas2d").clearCanvas();
+    var r = "";
+    switch ($("#jantype").val()) {
+    case "EAN13":
+      r = new EAN13BarcodeRenderer();
+      break;
+    case "EAN8":
+      r = new EAN8BarcodeRenderer();
+      break;
+    case "UPC A":
+      r = new UPCABarcodeRenderer();
+      break;
+    case "UPC E":
+      r = new UPCEBarcodeRenderer();
+      break;
+    case "UPC 5":
+      r = new UPC5BarcodeRenderer();
+      break;
+    case "UPC 2":
+      r = new UPC2BarcodeRenderer();
+      break;
+    }
+    var s = r.createSymbol($("#qrval").val());
+    r.drawSymbol($("#mycanvas2d")[0], 10, 10, 2, 100, 10, s);
+  });
+  $("#BarcodeRedraw_C39").click(function() {
+    $("#mycanvas2d").clearCanvas();
+    var r = new Code39BarcodeRenderer();
+    var s = r.createSymbol($("#qrval").val());
+    r.drawSymbol($("#mycanvas2d")[0], 10, 10, 2, 60, s);
+  });
+  $("#BarcodeRedraw_ITF").click(function() {
+    $("#mycanvas2d").clearCanvas();
+    var r = "";
+    switch ($("#2of5type").val()) {
+    case "ITF":
+      r = new ITFBarcodeRenderer();
+      break;
+    case "COOP":
+      r = new COOP2of5BarcodeRenderer();
+      break;
+    case "Matrix":
+      r = new Matrix2of5BarcodeRenderer();
+      break;
+    case "Industrial":
+      r = new Ind2of5BarcodeRenderer();
+      break;
+    }
+    var s = r.createSymbol($("#qrval").val());
+    r.drawSymbol($("#mycanvas2d")[0], 10, 10, 2, 60, s);
+  });
+  $("#BarcodeRedraw_NW7").click(function() {
+    $("#mycanvas2d").clearCanvas();
+    var r = new NW7BarcodeRenderer();
+    var s = r.createSymbol($("#qrval").val());
+    r.drawSymbol($("#mycanvas2d")[0], 10, 10, 2, 60, s);
+  });
+  $("#BarcodeRedraw_C128").click(function() {
+    $("#mycanvas2d").clearCanvas();
+    var r = new Code128BarcodeRenderer();
+    var s = r.createSymbol($("#qrval").val());
+    r.drawSymbol($("#mycanvas2d")[0], 10, 10, 2, 60, s);
+  });
+  $("#BarcodeRedraw_GS1").click(function() {
+    $("#mycanvas2d").clearCanvas();
+  });
+  $("#BarcodeRedraw_Postal").click(function() {
+    $("#mycanvas2d").clearCanvas();
+    var r = "";
+    var barh = 4;
+    switch ($("#postaltype").val()) {
+    case "PostBarAU":
+      r = new AuPostalPostbarBarcodeRenderer();
+      break;
+    case "PostBarCA":
+      r = new CaPostalPostbarBarcodeRenderer();
+      break;
+    case "PostBarUK":
+      r = new UkRoyalMailPostbarBarcodeRenderer();
+      break;
+    case "PostBarNL":
+      r = new NlTNTKixBarcodeRenderer();
+      break;
+    case "OneCodeUS":
+      break;
+    case "PostnetUS":
+      break;
+    case "PostFIMUS":
+      break;
+    case "CustomerJP":
+      r = new JapanPostalCustomerBarcodeRenderer();
+      break;
+    case "LeitcodeDE":
+      barh = 60;
+      r = new DPLeitcodeBarcodeRenderer();
+      break;
+    case "PostalCN":
+      barh = 60;
+      r = new ChinaPostPostalBarcodeRenderer();
+      break;
+    }
+    var s = r.createSymbol($("#qrval").val());
+    r.drawSymbol($("#mycanvas2d")[0], 10, 10, 2, barh, s);
+  });
+  $("#BarcodeParam_QR").click(function() {
+    $(".BarcodeParamPanels").hide();
+    $("#BarcodeParamPanel_QR").fadeIn();
+  });
+  $("#BarcodeParam_Dmatx").click(function() {
+    $(".BarcodeParamPanels").hide();
+    $("#BarcodeParamPanel_Dmatx").fadeIn();
+  });
+  $("#BarcodeParam_PDF417").click(function() {
+    $(".BarcodeParamPanels").hide();
+    $("#BarcodeParamPanel_PDF417").fadeIn();
+  });
+  $("#BarcodeParam_JAN").click(function() {
+    $(".BarcodeParamPanels").hide();
+    $("#BarcodeParamPanel_JAN").fadeIn();
+  });
+  $("#BarcodeParam_C39").click(function() {
+    $(".BarcodeParamPanels").hide();
+    $("#BarcodeParamPanel_C39").fadeIn();
+  });
+  $("#BarcodeParam_ITF").click(function() {
+    $(".BarcodeParamPanels").hide();
+    $("#BarcodeParamPanel_ITF").fadeIn();
+  });
+  $("#BarcodeParam_NW7").click(function() {
+    $(".BarcodeParamPanels").hide();
+    $("#BarcodeParamPanel_NW7").fadeIn();
+  });
+  $("#BarcodeParam_C128").click(function() {
+    $(".BarcodeParamPanels").hide();
+    $("#BarcodeParamPanel_C128").fadeIn();
+  });
+  $("#BarcodeParam_GS1").click(function() {
+    $(".BarcodeParamPanels").hide();
+    $("#BarcodeParamPanel_GS1").fadeIn();
+  });
+  $("#BarcodeParam_Postal").click(function() {
+    $(".BarcodeParamPanels").hide();
+    $("#BarcodeParamPanel_Postal").fadeIn();
+  });
+  $("#BarcodeParam_etc").click(function() {
+    $(".BarcodeParamPanels").hide();
+    $("#BarcodeParamPanel_ChrEnc").fadeIn();
+  });
+
+  $("#BarcodeParam_QR").hover(function() {
+    $("#BarcodeParam_QR").addClass("BarcodeParamButtonHover");
+  }, function() {
+    $("#BarcodeParam_QR").removeClass("BarcodeParamButtonHover");
+  });
+  $("#BarcodeParam_Dmatx").hover(function() {
+    $("#BarcodeParam_Dmatx").addClass("BarcodeParamButtonHover");
+  }, function() {
+    $("#BarcodeParam_Dmatx").removeClass("BarcodeParamButtonHover");
+  });
+  $("#BarcodeParam_PDF417").hover(function() {
+    $("#BarcodeParam_PDF417").addClass("BarcodeParamButtonHover");
+  }, function() {
+    $("#BarcodeParam_PDF417").removeClass("BarcodeParamButtonHover");
+  });
+  $("#BarcodeParam_JAN").hover(function() {
+    $("#BarcodeParam_JAN").addClass("BarcodeParamButtonHover");
+  }, function() {
+    $("#BarcodeParam_JAN").removeClass("BarcodeParamButtonHover");
+  });
+  $("#BarcodeParam_C39").hover(function() {
+    $("#BarcodeParam_C39").addClass("BarcodeParamButtonHover");
+  }, function() {
+    $("#BarcodeParam_C39").removeClass("BarcodeParamButtonHover");
+  });
+  $("#BarcodeParam_ITF").hover(function() {
+    $("#BarcodeParam_ITF").addClass("BarcodeParamButtonHover");
+  }, function() {
+    $("#BarcodeParam_ITF").removeClass("BarcodeParamButtonHover");
+  });
+  $("#BarcodeParam_NW7").hover(function() {
+    $("#BarcodeParam_NW7").addClass("BarcodeParamButtonHover");
+  }, function() {
+    $("#BarcodeParam_NW7").removeClass("BarcodeParamButtonHover");
+  });
+  $("#BarcodeParam_C128").hover(function() {
+    $("#BarcodeParam_C128").addClass("BarcodeParamButtonHover");
+  }, function() {
+    $("#BarcodeParam_C128").removeClass("BarcodeParamButtonHover");
+  });
+  $("#BarcodeParam_GS1").hover(function() {
+    $("#BarcodeParam_GS1").addClass("BarcodeParamButtonHover");
+  }, function() {
+    $("#BarcodeParam_GS1").removeClass("BarcodeParamButtonHover");
+  });
+  $("#BarcodeParam_Postal").hover(function() {
+    $("#BarcodeParam_Postal").addClass("BarcodeParamButtonHover");
+  }, function() {
+    $("#BarcodeParam_Postal").removeClass("BarcodeParamButtonHover");
+  });
+  $("#BarcodeParam_etc").hover(function() {
+    $("#BarcodeParam_etc").addClass("BarcodeParamButtonHover");
+  }, function() {
+    $("#BarcodeParam_etc").removeClass("BarcodeParamButtonHover");
+  });
+});
+
+$(function() {
+  $("#svgCanvasBody1").toggle();
+  $("#svgCanvasBody2").append($(
+	"<svg:svg xmlns:svg=\"http://www.w3.org/2000/svg\" width=\"8cm\" height=\"6cm\" viewBox=\"0 0 500 400\" version=\"1.1\">" +
+	"<svg:polygon" +
+  "  points=\"210,46 227,96 281,97 238,129 254,181 210,150 166,181 182,129 139,97 193,97\"" +
+  "  style=\"fill:#cccccc;stroke:#000000;stroke-width:1;\"></svg:polygon>" +
+  "</svg:svg>"
+	));
+
+  $(".BarcodeParamPanels").hide();
+  $(".GfTestbedPanels").toggle();
+  $("#svgCanvasBody2").toggle();
+  //$("#2dCanvasBody1").resizable({handles:"all",knobHandles:true});
+});
+//]]>
+</script>
+</head>
+<body>
+<div>
+  <!-- <input id="nextPage" style="" type="button" value="next page" /> -->
+  <input id="GfTestbedPanelsToggle" style="" type="button" value="GF Panels toggle" />
+</div>
+
+<!-- debug UI -->
+<div class="GroupBox GfTestbedPanels">
+  <table>
+    <tr><td>lhs</td><td>L</td><td><input id="polyValX" style="width:50em;" type="text" /></td><td>H</td></tr>
+    <tr><td>rhs</td><td>L</td><td><input id="polyValY" style="width:50em;" type="text" /></td><td>H</td></tr>
+  </table>
+</div>
+<div class="GroupBox GfTestbedPanels"><div>single value calculation</div>
+  <div><table><tr>
+  <td><input id="valAdd" style="width:4em;" type="button" value="+"   /></td>
+  <td><input id="valSub" style="width:4em;" type="button" value="-"   /></td>
+  <td><input id="valMul" style="width:4em;" type="button" value="*"   /></td>
+  <td><input id="valDiv" style="width:4em;" type="button" value="/"   /></td>
+  <td><input id="valNeg" style="width:4em;" type="button" value="-x"  /></td>
+  <td><input id="valInv" style="width:4em;" type="button" value="1/x" /></td>
+  <td><input id="valExp" style="width:4em;" type="button" value="exp" /></td>
+  <td><input id="valLog" style="width:4em;" type="button" value="log" /></td>
+  </tr></table></div>
+</div>
+<div class="GroupBox GfTestbedPanels"><div>polynominal calculation</div>
+  <div><table><tr>
+  <td><input id="polyAdd" style="width:4em;" type="button" value="+"   /></td>
+  <td><input id="polySub" style="width:4em;" type="button" value="-"   /></td>
+  <td><input id="polyMul" style="width:4em;" type="button" value="*"   /></td>
+  <td><input id="polyDiv" style="width:4em;" type="button" value="/"   /></td>
+  <td><input id="polyMod" style="width:4em;" type="button" value="mod" /></td>
+  </tr></table></div>
+</div>
+<div class="GroupBox GfTestbedPanels"><div>reed solomon calculation</div><div></div>
+</div>
+<div class="GroupBox GfTestbedPanels"><div>bch calculation</div>
+  <div><table><tr>
+  <td><input id="bPolyAdd" style="width:4em;" type="button" value="+"   /></td>
+  <td><input id="bPolySub" style="width:4em;" type="button" value="-"   /></td>
+  <td><input id="bPolyMul" style="width:4em;" type="button" value="*"   /></td>
+  <td><input id="bPolyDiv" style="width:4em;" type="button" value="/"   /></td>
+  <td><input id="bPolyMod" style="width:4em;" type="button" value="mod" /></td>
+  </tr></table></div>
+</div>
+<div class="GroupBox">
+  <div>
+    <div class="GroupBox">
+      <span id="BarcodeParam_QR"     class="BarcodeParamButton">QR Code</span>
+      <span id="BarcodeParam_Dmatx"  class="BarcodeParamButton">Data Matrix</span>
+      <span id="BarcodeParam_PDF417" class="BarcodeParamButton">PDF 417</span>
+      <span id="BarcodeParam_C128"   class="BarcodeParamButton">CODE 128</span>
+      <span id="BarcodeParam_GS1"    class="BarcodeParamButton">GS1 DataBar</span>
+      <span id="BarcodeParam_JAN"    class="BarcodeParamButton">EAN/UPC</span>
+      <span id="BarcodeParam_ITF"    class="BarcodeParamButton">2 of 5</span>
+      <span id="BarcodeParam_C39"    class="BarcodeParamButton">CODE 39</span>
+      <span id="BarcodeParam_NW7"    class="BarcodeParamButton">NW7</span>
+      <span id="BarcodeParam_Postal" class="BarcodeParamButton">Postal</span>
+      <span id="BarcodeParam_etc"    class="BarcodeParamButton">...</span>
+    </div>
+    <div id="BarcodeParamPanel_QR" class="GroupBox BarcodeParamPanels">
+      <span style="width:6em;display:inline-block;background-color:#eeeeee;">QR Code</span>
+      <input id="BarcodeRedraw_QR" style="" type="button" value="redraw" /><span style="width:2em;display:inline-block;"> </span>
+      model <select id="qrmodel">
+        <option value="1">Model 1</option>
+        <option value="2" selected="selected">Model 2</option>
+        <option value="C">Micro</option>
+      </select>
+      ver <input id="qrver" style="width:2em;" type="text" value="1" />
+      ecc <select id="qrecc">
+        <option value="L">L</option>
+        <option value="M" selected="selected">M</option>
+        <option value="Q">Q</option>
+        <option value="H">H</option>
+      </select>
+      mode <select id="qrmode">
+        <option value="Auto">Auto</option>
+        <option value="Num" selected="selected">Num</option>
+        <option value="Alnum">Alnum</option>
+        <option value="8bit">8bit</option>
+        <option value="Kanji">Kanji</option>
+        <option value="Binary">Binary</option>
+        <option value="RAW">RAW</option>
+      </select>
+      charset <select id="qrcharset">
+        <option value="UTF-8">UTF-8</option>
+        <option value="Shift_JIS" selected="selected">Shift_JIS</option>
+      </select>
+      mask <select id="qrmask">
+        <option value="-1" selected="selected">Auto</option>
+        <option value="0">0</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+      </select>
+    </div>
+    <div id="BarcodeParamPanel_Dmatx" class="GroupBox BarcodeParamPanels">
+      <span style="width:6em;display:inline-block;background-color:#eeeeee;">Data Matrix</span>
+      <input id="BarcodeRedraw_Dmatx" style="" type="button" value="redraw" /><span style="width:2em;display:inline-block;"> </span>
+      size <select id="dmatxsize">
+      </select>
+      mode <select id="dmatxmode">
+        <option value="Auto">Auto</option>
+        <option value="ASCII" selected="selected">ASCII</option>
+        <option value="C40">C40</option>
+        <option value="Text">Text</option>
+        <option value="X12">X12</option>
+        <option value="EDIFACT">EDIFACT</option>
+        <option value="Base256">Base256</option>
+        <option value="RAW">RAW</option>
+      </select>
+      charset <select id="dmatxcharset">
+        <option value="UTF-8" selected="selected">UTF-8</option>
+        <option value="Shift_JIS">Shift_JIS</option>
+      </select>
+    </div>
+    <div id="BarcodeParamPanel_PDF417" class="GroupBox BarcodeParamPanels">
+      <span style="width:6em;display:inline-block;background-color:#eeeeee;">PDF 417</span>
+      <input id="BarcodeRedraw_PDF417" style="" type="button" value="redraw" /><span style="width:2em;display:inline-block;"> </span>
+      row <input id="pdf417row" style="width:2em;" type="text" value="3" />
+      col <input id="pdf417col" style="width:2em;" type="text" value="5" />
+      type <select id="pdf417type">
+        <option value="Full" selected="selected">Full</option>
+        <option value="Compact">Compact</option>
+        <option value="Compact">Micro</option>
+      </select>
+      eclv <select id="pdf417eclv">
+        <option value="0">0</option>
+        <option value="1" selected="selected">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+      </select>
+      mode <select id="pdf417mode">
+        <option value="Auto">Auto</option>
+        <option value="Text" selected="selected">Text</option>
+        <option value="Byte">Byte</option>
+        <option value="Numeric">Numeric</option>
+        <option value="RAW">RAW</option>
+      </select>
+      charset <select id="pdf417charset">
+        <option value="UTF-8" selected="selected">UTF-8</option>
+        <option value="Shift_JIS">Shift_JIS</option>
+      </select>
+    </div>
+    <div id="BarcodeParamPanel_C128" class="GroupBox BarcodeParamPanels">
+      <span style="width:6em;display:inline-block;background-color:#eeeeee;">CODE 128</span>
+      <input id="BarcodeRedraw_C128" style="" type="button" value="redraw" /><span style="width:2em;display:inline-block;"> </span>
+    </div>
+    <div id="BarcodeParamPanel_GS1" class="GroupBox BarcodeParamPanels">
+      <span style="width:6em;display:inline-block;background-color:#eeeeee;">GS1 DataBar</span>
+      <input id="BarcodeRedraw_GS1" style="" type="button" value="redraw" /><span style="width:2em;display:inline-block;"> </span>
+    </div>
+    <div id="BarcodeParamPanel_JAN" class="GroupBox BarcodeParamPanels">
+      <span style="width:6em;display:inline-block;background-color:#eeeeee;">EAN/UPC</span>
+      <input id="BarcodeRedraw_JAN" style="" type="button" value="redraw" /><span style="width:2em;display:inline-block;"> </span>
+      type <select id="jantype">
+        <option value="EAN8">EAN8</option>
+        <option value="EAN13" selected="selected">EAN13</option>
+        <option value="UPC A">UPC A</option>
+        <option value="UPC E">UPC E</option>
+        <option value="UPC 5">UPC 5</option>
+        <option value="UPC 2">UPC 2</option>
+      </select>
+    </div>
+    <div id="BarcodeParamPanel_ITF" class="GroupBox BarcodeParamPanels">
+      <span style="width:6em;display:inline-block;background-color:#eeeeee;">2 of 5</span>
+      <input id="BarcodeRedraw_ITF" style="" type="button" value="redraw" /><span style="width:2em;display:inline-block;"> </span>
+      type <select id="2of5type">
+        <option value="ITF" selected="selected">ITF</option>
+        <option value="COOP">COOP</option>
+        <option value="Matrix">Matrix</option>
+        <option value="Industrial">Industrial</option>
+      </select>
+    </div>
+    <div id="BarcodeParamPanel_C39" class="GroupBox BarcodeParamPanels">
+      <span style="width:6em;display:inline-block;background-color:#eeeeee;">CODE 39</span>
+      <input id="BarcodeRedraw_C39" style="" type="button" value="redraw" /><span style="width:2em;display:inline-block;"> </span>
+    </div>
+    <div id="BarcodeParamPanel_NW7" class="GroupBox BarcodeParamPanels">
+      <span style="width:6em;display:inline-block;background-color:#eeeeee;">NW7</span>
+      <input id="BarcodeRedraw_NW7" style="" type="button" value="redraw" /><span style="width:2em;display:inline-block;"> </span>
+    </div>
+    <div id="BarcodeParamPanel_Postal" class="GroupBox BarcodeParamPanels">
+      <span style="width:6em;display:inline-block;background-color:#eeeeee;">Postal</span>
+      <input id="BarcodeRedraw_Postal" style="" type="button" value="redraw" /><span style="width:2em;display:inline-block;"> </span>
+      type <select id="postaltype">
+        <option value="PostBarCA">PostBar (Canada)</option>
+        <option value="PostBarAU">PostBar (Australia)</option>
+        <option value="PostBarUK">PostBar (Royal Mail)</option>
+        <option value="PostBarNL">PostBar (TNT Kix)</option>
+        <option value="PostnetUS">US Postnet</option>
+        <option value="OneCodeUS">US OneCode</option>
+        <option value="PostFIMUS">US Post FIM</option>
+        <option value="CustomerJP" selected="selected">Customer Barcode (Japan)</option>
+        <option value="LeitcodeDE">Deutsche Post Leitcode</option>
+        <option value="PostalCN">China Post</option>
+      </select>
+    </div>
+    <div id="BarcodeParamPanel_ChrEnc" class="GroupBox BarcodeParamPanels">
+      <input id="utf8enc" style="" type="button" value="utf8enc" />
+      <input id="utf8dec" style="" type="button" value="utf8dec" />
+      <input id="javaenc" style="" type="button" value="javaenc" />
+      <input id="javadec" style="" type="button" value="javadec" />
+      <input id="ajaxenc" style="" type="button" value="ajaxenc" />
+      <input id="ajaxdec" style="" type="button" value="ajaxdec" />
+      <input id="sb67enc" style="" type="button" value="sb67enc" />
+      <input id="sb67dec" style="" type="button" value="sb67dec" />
+      <input id="base64enc" style="" type="button" value="base64enc" />
+      <input id="base64dec" style="" type="button" value="base64dec" />
+      <input id="base32enc" style="" type="button" value="base32enc" />
+      <input id="base32dec" style="" type="button" value="base32dec" />
+      <input id="base16enc" style="" type="button" value="base16enc" />
+      <input id="base16dec" style="" type="button" value="base16dec" />
+    </div>
+  </div>
+  <div><textarea id="qrval" style="width:50em;height:3em;">1234567</textarea></div>
+</div>
+
+<!-- 2d renderer drawing -->
+<div class="GroupBox"><div class="PanelTitleBar" id="2dCanvasTitleBar1">canvas</div>
+<div id="2dCanvasBody1"><canvas id="mycanvas2d" width="900px" height="600px"></canvas></div></div>
+
+<!-- SVG static drawing -->
+<div class="GroupBox"><div class="PanelTitleBar" id="svgCanvasTitleBar1">canvas</div>
+<div id="svgCanvasBody1"><svg:svg xmlns:svg="http://www.w3.org/2000/svg" width="8cm" height="6cm" viewBox="0 0 500 400" version="1.1">
+  <svg:desc>A star written in SVG using the 'polygon' element.</svg:desc>
+  <svg:polygon
+    points="210,46 227,96 281,97 238,129 254,181 210,150 166,181 182,129 139,97 193,97"
+    style="fill:#cccccc;stroke:#000000;stroke-width:1;" />
+</svg:svg></div>
+</div>
+
+<!-- SVG dynamic drawing -->
+<div class="GroupBox"><div class="PanelTitleBar" id="svgCanvasTitleBar2">canvas</div>
+<div id="svgCanvasBody2"></div>
+</div>
+
+<!-- debug print area -->
+<div class="GroupBox GfTestbedPanels" id="qqq">===============================</div>
+<noscript><div>script:off</div></noscript>
+</body>
+</html>

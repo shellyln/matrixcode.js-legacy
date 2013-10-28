@@ -1,0 +1,4 @@
+model2 M 8bit
+-> mask 1,2,4 may have bugs -> fix
+
+micro mask 0,2,3 may bug

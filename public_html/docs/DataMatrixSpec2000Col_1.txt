@@ -1,0 +1,15 @@
+Hi all,
+
+Data Matrix 144x144 symbols appear to have an interesting property that
+is distinct from other sizes of the said symbology. Specifically, in
+144x144 symbols the error correction block alignment for reinterlacing
+needs to be "rotated right" by two positions so that the ECC blocks
+corresponding to the two "short" data blocks are placed first - which
+happens to be entirely contrary to annexe G.2 of ISO/IEC 16022:2000!
+However convention appears to out way formality in the matter since the
+ECC-block-reordered symbols do scan correctly whilst the plain symbols
+do not.
+
+After many hours of pinpointing the cause of the previous 144x144 scan
+failures, I've made a new release with the above modification which has
+been tested as follows: 
