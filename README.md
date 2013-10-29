@@ -7,6 +7,12 @@ QR Code, Data Matrix, PDF417, and other barcodes library for JavaScript (experim
 
 ### Now we are planning to refactor and re-implement it on [matrixcode.js Project](https://github.com/qnq777/matrixcode.js).  
 
+# Key features
+  * Render matrix codes and barcodes to canvas.
+  * Render QR Code to SVG.
+  * Include Read Solomon polynomial math library that can encode and decode.
+
+
 # Issues
   * **not tested well**
   * pollute global namespace
