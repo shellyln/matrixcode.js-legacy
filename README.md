@@ -5,8 +5,6 @@ QR Code, Data Matrix, PDF417, and other barcodes library for JavaScript (experim
 
 **This project has been frozen.**
 
-### Now we are planning to refactor and re-implement it on [matrixcode.js Project](https://github.com/qnq777/matrixcode.js).  
-
 # Key features
   * Render matrix codes and barcodes to canvas.
   * Render QR Code to SVG.
@@ -22,8 +20,6 @@ QR Code, Data Matrix, PDF417, and other barcodes library for JavaScript (experim
 
 # Demo
   * [http://peaceful-reef-9492.herokuapp.com/](http://peaceful-reef-9492.herokuapp.com/) (Server is SLOW)
-  * download [zip](https://github.com/qnq777/matrixcode.js-legacy/archive/master.zip) and
-    open [public_html/index.html](https://github.com/qnq777/matrixcode.js-legacy/blob/master/public_html/index.html)
+  * download [zip](https://github.com/shellyln/matrixcode.js-legacy/archive/master.zip) and
+    open [public_html/index.html](https://github.com/shellyln/matrixcode.js-legacy/blob/master/public_html/index.html)
 
-----
-This program was written in April 2009 from January 2009.
